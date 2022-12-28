@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+    # imagem micro gateway
+    app_ms_gateway:
+        container_name: app_ms_gateway
+        build:
+            args:
+                user: ${DOCKER_USER}
+                uid: ${DOCKER_UID}
+            context: ./
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        depends_on:
+            - redis_ms_gateway
+        networks:
+            - network_ms_gateway
+
+    # imagem nginx
+    nginx_ms_gateway:
+        container_name: nginx_ms_gateway
+        image: nginx:alpine
+        restart: unless-stopped
+        ports:
+            - 8003:80
+            #- 443:443
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/:/etc/nginx/conf.d/
+        networks:
+            - network_ms_gateway
+
+    # redis
+    redis_ms_gateway:
+        container_name: redis_ms_gateway
+        image: redis:latest
+        networks:
+            - network_ms_gateway
+
+networks:
+    network_ms_gateway:
+        driver: bridge
